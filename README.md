@@ -1,4 +1,6 @@
 # ai-server
+
+```bash
 ai-server/
 │
 ├── main.py                     # FastAPI 서버 시작점
