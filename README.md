@@ -9,7 +9,6 @@ ai-server/
 │
 ├── api/                        # API 라우터 모음
 │   ├── summary.py              # 요약 요청 API
-│   ├── chat.py                 # 챗봇 요청 API
 │   └── classify.py             # 분류 요청 API
 │
 ├── services/                   # 실제 기능 로직
