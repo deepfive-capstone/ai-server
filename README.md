@@ -14,8 +14,7 @@ ai-server/
 ├── services/                   # 실제 기능 로직
 │   ├── crawler.py              # 링크 본문/자막 추출
 │   ├── summarizer.py           # 요약 기능
-│   ├── classifier.py           # 카테고리 분류 기능
-│   └── recommender.py          # 추천 기능(나중용)
+│   └── classifier.py           # 카테고리 분류 기능
 │
 ├── train/                      # 모델 학습 코드
 │   └── train_classifier.py     # 분류 모델 학습 코드
