@@ -7,7 +7,9 @@ router = APIRouter()
 class SummaryRequest(BaseModel):
     text: str
 
-@router.post("/summary")
-def summary(request: SummaryRequest):
-    summary_result = summarize_text(request.text)
-    return {"summary": summary_result}
+@router.post("/summarize")
+def summarize(request: SummaryRequest):
+    summary = summarize_text(request.text)
+    return {
+        "summary": summary
+    }
