@@ -68,7 +68,7 @@ def get_transcript(url: str):
             "title": video_info["title"],
             "channel": video_info["channel"],
             "thumbnail": video_info["thumbnail"],
-            "transcript": transcript_text[:1000]
+            "transcript": transcript_text
         }
     except Exception as e:
         return {

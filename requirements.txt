@@ -5,3 +5,6 @@ yt-dlp
 transformers
 torch
 sentencepiece
+pandas
+openpyxl
+requests
