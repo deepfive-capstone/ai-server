@@ -10,7 +10,7 @@ df = pd.read_excel(INPUT_FILE)
 
 for idx, row in df.iterrows():
     # 1~18번은 이미 채웠으니까 건너뛰기
-    if idx < 18:
+    if idx < 163:
         continue
 
     url = row.get("url")
