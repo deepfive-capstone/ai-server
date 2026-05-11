@@ -5,6 +5,7 @@ from services.classifier import predict_category
 from services.summarizer import summarize_text
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
+import yt_dlp
 
 router = APIRouter()
 
@@ -28,9 +29,22 @@ def extract_video_id(url: str):
 def get_youtube_transcript(video_id: str):
     ytt_api = YouTubeTranscriptApi()
     transcript = ytt_api.fetch(video_id, languages=["ko", "en"])
+    return " ".join([item.text for item in transcript])
 
-    full_text = " ".join([item.text for item in transcript])
-    return full_text
+def get_youtube_info(url: str):
+    ydl_opts = {
+        "quiet": True,
+        "skip_download": True
+    }
+
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        info = ydl.extract_info(url, download=False)
+
+    return {
+        "title": info.get("title"),
+        "thumbnail_url": info.get("thumbnail"),
+        "channel": info.get("channel") or info.get("uploader")
+    }
 
 @router.post("/analyze")
 def analyze(request: AnalyzeRequest):
@@ -38,6 +52,15 @@ def analyze(request: AnalyzeRequest):
 
     if video_id is None:
         return {"error": "유효한 유튜브 URL이 아닙니다."}
+
+    try:
+        video_info = get_youtube_info(request.url)
+    except Exception:
+        video_info = {
+            "title": None,
+            "thumbnail_url": None,
+            "channel": None
+        }
 
     try:
         transcript = get_youtube_transcript(video_id)
@@ -49,6 +72,9 @@ def analyze(request: AnalyzeRequest):
 
     return {
         "video_id": video_id,
+        "title": video_info["title"],
+        "thumbnail_url": video_info["thumbnail_url"],
+        "channel": video_info["channel"],
         "category": category,
         "summary": summary
     }
