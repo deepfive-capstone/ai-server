@@ -12,6 +12,13 @@ router = APIRouter()
 class AnalyzeRequest(BaseModel):
     url: str
 
+def clean_transcript(text: str):
+    text = re.sub(r'\n+', ' ', text)
+    text = re.sub(r'[a-zA-Z]{15,}', ' ', text)
+    text = re.sub(r'(\b\w+\b)( \1\b)+', r'\1', text)
+    text = re.sub(r'\s+', ' ', text)
+    return text.strip()
+
 def extract_video_id(url: str):
     patterns = [
         r"v=([^&]+)",
@@ -64,11 +71,12 @@ def analyze(request: AnalyzeRequest):
 
     try:
         transcript = get_youtube_transcript(video_id)
+        transcript = clean_transcript(transcript)
     except Exception as e:
         return {"error": f"자막 추출 실패: {str(e)}"}
 
     category = predict_category(transcript)
-    summary = summarize_text(transcript)
+    summary = summarize_text(transcript, category)
 
     return {
         "video_id": video_id,

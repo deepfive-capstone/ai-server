@@ -8,3 +8,8 @@ sentencepiece
 pandas
 openpyxl
 requests
+scikit-learn
+joblib
+transformers
+sentencepiece
+torch
