@@ -2,7 +2,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from services.classifier import predict_category
-from services.summarizer import summarize_text
+from services.lora_summarizer import summarize_with_lora
+from services.summarizer import improve_summary_with_gemini
+
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
 import yt_dlp
@@ -76,7 +78,22 @@ def analyze(request: AnalyzeRequest):
         return {"error": f"자막 추출 실패: {str(e)}"}
 
     category = predict_category(transcript)
-    summary = summarize_text(transcript, category)
+
+    try:
+        qwen_summary = summarize_with_lora(transcript, category)
+
+        summary = improve_summary_with_gemini(
+            original_text=transcript,
+            qwen_summary=qwen_summary,
+            category=category
+        )
+
+        summary_model = "qwen_lora + gemini_refine"
+
+    except Exception as e:
+        qwen_summary = None
+        summary = f"요약 실패: {str(e)}"
+        summary_model = "failed"
 
     return {
         "video_id": video_id,
@@ -84,5 +101,5 @@ def analyze(request: AnalyzeRequest):
         "thumbnail_url": video_info["thumbnail_url"],
         "channel": video_info["channel"],
         "category": category,
-        "summary": summary
+        "summary": summary,
     }
