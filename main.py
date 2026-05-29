@@ -1,8 +1,10 @@
 from fastapi import FastAPI
 from youtube_transcript_api import YouTubeTranscriptApi
+from api.recommend import router as recommend_router
 from api.summary import router as summary_router
 from api.classify import router as classify_router
 from api.analyze import router as analyze_router
+from api.recommend import router as recommend_router
 import re
 import yt_dlp
 from services.summarizer import summarize_text
@@ -11,6 +13,7 @@ app = FastAPI()
 app.include_router(summary_router)
 app.include_router(classify_router)
 app.include_router(analyze_router)
+app.include_router(recommend_router)
 
 
 def extract_video_id(url: str):

@@ -13,3 +13,5 @@ joblib
 transformers
 sentencepiece
 torch
+sentence-transformers
+numpy
