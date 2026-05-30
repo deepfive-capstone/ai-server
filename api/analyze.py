@@ -1,7 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from services.classifier import predict_category
+from services.classifier import (
+    predict_category,
+    predict_category_with_score
+)
 from services.lora_summarizer import summarize_with_lora
 from services.summarizer import improve_summary_with_gemini
 
@@ -78,7 +81,18 @@ def analyze(request: AnalyzeRequest):
     except Exception as e:
         return {"error": f"자막 추출 실패: {str(e)}"}
 
-    category = predict_category(transcript)
+    text_for_classification = (
+        (video_info["title"] or "")
+        + "\n"
+        + transcript
+    )
+
+    result = predict_category_with_score(
+         text_for_classification
+    )
+
+    category = result["category"]
+    confidence = result["confidence"]
 
     try:
         qwen_summary = summarize_with_lora(transcript, category)
@@ -102,5 +116,6 @@ def analyze(request: AnalyzeRequest):
         "thumbnail_url": video_info["thumbnail_url"],
         "channel": video_info["channel"],
         "category": category,
+        "confidence": confidence,
         "summary": summary,
     }
