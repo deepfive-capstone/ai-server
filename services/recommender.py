@@ -131,3 +131,20 @@ def recommend_videos(
         "candidate_count": len(candidates),
         "recommendations": recommendations
     }
+
+def search_youtube_recommendations(
+    title: str,
+    category: str = "",
+    summary: str = "",
+    keywords: list[str] = None,
+    limit: int = 5,
+    candidate_count: int = 20
+):
+    return recommend_videos(
+        title=title,
+        category=category,
+        summary=summary,
+        keywords=keywords,
+        limit=limit,
+        candidate_count=candidate_count
+    )
