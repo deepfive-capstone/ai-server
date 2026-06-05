@@ -91,7 +91,7 @@ def summarize_with_lora(text: str, category: str = "기타") -> str:
 카테고리: {category}
 
 자막:
-{text[:3500]}
+{text[:1000]}
 
 ### 정답:
 """
@@ -101,7 +101,7 @@ def summarize_with_lora(text: str, category: str = "기타") -> str:
         with torch.no_grad():
             outputs = model.generate(
                 **inputs,
-                max_new_tokens=120,
+                max_new_tokens=60,
                 temperature=0.1,
                 top_p=0.9,
                 repetition_penalty=1.2,

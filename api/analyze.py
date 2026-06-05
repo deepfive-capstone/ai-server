@@ -8,10 +8,10 @@ from services.classifier import (
 from services.lora_summarizer import summarize_with_lora
 from services.summarizer import improve_summary_with_gemini
 
-
 from youtube_transcript_api import YouTubeTranscriptApi
 import re
 import yt_dlp
+import time
 
 router = APIRouter()
 
@@ -61,13 +61,17 @@ def get_youtube_info(url: str):
 
 @router.post("/analyze")
 def analyze(request: AnalyzeRequest):
+    total_start = time.time()
+
     video_id = extract_video_id(request.url)
 
     if video_id is None:
         return {"error": "유효한 유튜브 URL이 아닙니다."}
 
     try:
+        start = time.time()
         video_info = get_youtube_info(request.url)
+        print(f"[analyze] 영상 정보 추출: {time.time() - start:.2f}초")
     except Exception:
         video_info = {
             "title": None,
@@ -76,10 +80,16 @@ def analyze(request: AnalyzeRequest):
         }
 
     try:
+        start = time.time()
         transcript = get_youtube_transcript(video_id)
+        print(f"[analyze] 자막 추출: {time.time() - start:.2f}초")
+
+        start = time.time()
         transcript = clean_transcript(transcript)
+        print(f"[analyze] 자막 전처리: {time.time() - start:.2f}초")
+
     except Exception as e:
-        return {"error": f"자막 추출 실패: {str(e)}"}
+        return {"error": "이 영상은 자막이 제공되지 않아 요약할 수 없습니다."}
 
     text_for_classification = (
         (video_info["title"] or "")
@@ -87,21 +97,25 @@ def analyze(request: AnalyzeRequest):
         + transcript
     )
 
-    result = predict_category_with_score(
-         text_for_classification
-    )
+    start = time.time()
+    result = predict_category_with_score(text_for_classification)
+    print(f"[analyze] 카테고리 분류: {time.time() - start:.2f}초")
 
     category = result["category"]
     confidence = result["confidence"]
 
     try:
+        start = time.time()
         qwen_summary = summarize_with_lora(transcript, category)
+        print(f"[analyze] Qwen LoRA 요약: {time.time() - start:.2f}초")
 
+        start = time.time()
         summary = improve_summary_with_gemini(
             original_text=transcript,
             qwen_summary=qwen_summary,
             category=category
         )
+        print(f"[analyze] Gemini 보정: {time.time() - start:.2f}초")
 
         summary_model = "qwen_lora + gemini_refine"
 
@@ -109,6 +123,8 @@ def analyze(request: AnalyzeRequest):
         qwen_summary = None
         summary = f"요약 실패: {str(e)}"
         summary_model = "failed"
+
+    print(f"[analyze] 전체 소요 시간: {time.time() - total_start:.2f}초")
 
     return {
         "video_id": video_id,
