@@ -1,6 +1,9 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
-from services.classifier import predict_category
+from services.classifier import (
+	predict_category,
+	predict_category_with_score
+)
 from services.crawler import (
     extract_video_id,
     get_youtube_transcript,
@@ -38,12 +41,16 @@ def classify_youtube(request: YoutubeClassifyRequest):
 
     text = title + "\n" + transcript
 
-    category = predict_category(text)
+    result = predict_category_with_score(text)
+
+    category = result["category"]
+    confidence = result["confidence"]
 
     return {
         "video_id": video_id,
         "title": title,
         "channel": channel,
         "thumbnail": thumbnail,
-        "category": category
+        "category": category,
+        "confidence": confidence
     }

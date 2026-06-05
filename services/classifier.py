@@ -1,5 +1,6 @@
 from pathlib import Path
 import joblib
+import numpy as np
 
 MODEL_PATH = Path("models/content_classifier.joblib")
 
@@ -21,13 +22,14 @@ def predict_category_with_score(text: str):
     pred = model.predict([text])[0]
 
     scores = model.decision_function([text])
+    scores = np.array(scores).reshape(-1)
 
-    try:
-        confidence = float(scores.max())
-    except:
-        confidence = 0.0
+    exp_scores = np.exp(scores - np.max(scores))
+    probs = exp_scores / exp_scores.sum()
+
+    confidence = float(probs.max()) * 100
 
     return {
         "category": pred,
-        "confidence": round(confidence, 3)
+        "confidence": round(confidence, 1)
     }
