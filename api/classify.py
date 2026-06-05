@@ -39,7 +39,13 @@ def classify_youtube(request: YoutubeClassifyRequest):
 
     transcript = get_youtube_transcript(video_id)
 
-    text = title + "\n" + transcript
+    text = (
+        title + "\n" +
+        title + "\n" +
+        title + "\n" +
+        transcript[:1000]
+    )
+
 
     result = predict_category_with_score(text)
 
