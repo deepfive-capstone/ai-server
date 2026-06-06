@@ -36,7 +36,7 @@ def get_video_info(video_id: str):
         info = ydl.extract_info(url, download=False)
 
     return {
-        "title": info.get("title"),
-        "channel": info.get("channel"),
-        "thumbnail": info.get("thumbnail")
+        "title": info.get("title") or "",
+        "channel": info.get("channel") or "",
+        "thumbnail": info.get("thumbnail") or ""
     }
