@@ -115,7 +115,10 @@ def analyze(request: AnalyzeRequest):
     )
 
     start = time.time()
-    result = predict_category_with_score(text_for_classification)
+    result = predict_category_with_score(
+        text_for_classification,
+        title=video_info["title"]
+    )
     print(f"[analyze] 카테고리 분류: {time.time() - start:.2f}초")
 
     category = result["category"]

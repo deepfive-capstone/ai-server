@@ -58,7 +58,7 @@ def classify_youtube(request: YoutubeClassifyRequest):
     print("==============================")
 
 
-    result = predict_category_with_score(text)
+    result = predict_category_with_score(text, title=title)
 
     category = result["category"]
     confidence = result["confidence"]
