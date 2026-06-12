@@ -49,7 +49,7 @@ def search_youtube_candidates(query: str, max_results: int = 20):
             "video_id": video_id,
             "title": title,
             "channel": channel,
-            "thumbnail_url": item.get("thumbnail"),
+            "thumbnail_url": f"https://i.ytimg.com/vi/{video_id}/maxresdefault.jpg",
             "youtube_url": f"https://www.youtube.com/watch?v={video_id}",
             "search_rank": rank
         })
