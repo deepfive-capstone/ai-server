@@ -21,5 +21,5 @@ def recommend_videos(req: RecommendRequest):
 
     return {
         "query": recommendations.get("query", ""),
-        "recommendations": recommendations
+        "recommendations": recommendations.get("recommendations", [])
     }
