@@ -13,10 +13,13 @@ class RecommendRequest(BaseModel):
 
 @router.post("")
 def recommend_videos(req: RecommendRequest):
-    query = make_recommend_query(req.title, req.category)
-    recommendations = search_youtube_recommendations(query, req.limit)
+    recommendations = search_youtube_recommendations(
+        title=req.title,
+        category=req.category,
+        limit=req.limit
+    )
 
     return {
-        "query": query,
+        "query": recommendations.get("query", ""),
         "recommendations": recommendations
     }

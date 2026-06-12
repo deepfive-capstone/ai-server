@@ -1,7 +1,10 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from services.classifier import predict_category_with_score
+from services.classifier import (
+    predict_category,
+    predict_category_with_score
+)
 from services.lora_summarizer import summarize_with_lora
 from services.summarizer import improve_summary_with_gemini
 
@@ -12,24 +15,21 @@ import time
 
 router = APIRouter()
 
-
 class AnalyzeRequest(BaseModel):
     url: str
 
-
 def clean_transcript(text: str):
-    text = re.sub(r"\n+", " ", text)
-    text = re.sub(r"[a-zA-Z]{15,}", " ", text)
-    text = re.sub(r"(\b\w+\b)( \1\b)+", r"\1", text)
-    text = re.sub(r"\s+", " ", text)
+    text = re.sub(r'\n+', ' ', text)
+    text = re.sub(r'[a-zA-Z]{15,}', ' ', text)
+    text = re.sub(r'(\b\w+\b)( \1\b)+', r'\1', text)
+    text = re.sub(r'\s+', ' ', text)
     return text.strip()
-
 
 def extract_video_id(url: str):
     patterns = [
-        r"v=([a-zA-Z0-9_-]{11})",
-        r"youtu\.be/([a-zA-Z0-9_-]{11})",
-        r"shorts/([a-zA-Z0-9_-]{11})"
+        r"v=([^&]+)",
+        r"youtu\.be/([^?&]+)",
+        r"shorts/([^?&]+)"
     ]
 
     for pattern in patterns:
@@ -39,12 +39,10 @@ def extract_video_id(url: str):
 
     return None
 
-
 def get_youtube_transcript(video_id: str):
     ytt_api = YouTubeTranscriptApi()
     transcript = ytt_api.fetch(video_id, languages=["ko", "en"])
     return " ".join([item.text for item in transcript])
-
 
 def get_youtube_info(url: str):
     ydl_opts = {
@@ -56,11 +54,10 @@ def get_youtube_info(url: str):
         info = ydl.extract_info(url, download=False)
 
     return {
-        "title": info.get("title") or "",
-        "thumbnail_url": info.get("thumbnail") or "",
-        "channel": info.get("channel") or info.get("uploader") or ""
+        "title": info.get("title"),
+        "thumbnail_url": info.get("thumbnail"),
+        "channel": info.get("channel") or info.get("uploader")
     }
-
 
 @router.post("/analyze")
 def analyze(request: AnalyzeRequest):
@@ -75,14 +72,11 @@ def analyze(request: AnalyzeRequest):
         start = time.time()
         video_info = get_youtube_info(request.url)
         print(f"[analyze] 영상 정보 추출: {time.time() - start:.2f}초")
-
-    except Exception as e:
-        print(f"[analyze] 영상 정보 추출 실패: {e}")
-
+    except Exception:
         video_info = {
-            "title": "",
-            "thumbnail_url": "",
-            "channel": ""
+            "title": None,
+            "thumbnail_url": None,
+            "channel": None
         }
 
     try:
@@ -95,30 +89,16 @@ def analyze(request: AnalyzeRequest):
         print(f"[analyze] 자막 전처리: {time.time() - start:.2f}초")
 
     except Exception as e:
-        print(f"[analyze] 자막 추출 실패: {e}")
+        return {"error": "이 영상은 자막이 제공되지 않아 요약할 수 없습니다."}
 
-        return {
-            "video_id": video_id,
-            "title": video_info["title"],
-            "thumbnail_url": video_info["thumbnail_url"],
-            "channel": video_info["channel"],
-            "error": "이 영상은 자막이 제공되지 않아 요약할 수 없습니다."
-        }
-
-    # classify-youtube와 동일한 분류 입력 구조
     text_for_classification = (
         (video_info["title"] or "")
-        + "\n채널: "
-        + (video_info["channel"] or "")
         + "\n"
         + transcript
     )
 
     start = time.time()
-    result = predict_category_with_score(
-        text_for_classification,
-        title=video_info["title"]
-    )
+    result = predict_category_with_score(text_for_classification)
     print(f"[analyze] 카테고리 분류: {time.time() - start:.2f}초")
 
     category = result["category"]
@@ -137,9 +117,12 @@ def analyze(request: AnalyzeRequest):
         )
         print(f"[analyze] Gemini 보정: {time.time() - start:.2f}초")
 
+        summary_model = "qwen_lora + gemini_refine"
+
     except Exception as e:
-        print(f"[analyze] 요약 실패: {e}")
+        qwen_summary = None
         summary = f"요약 실패: {str(e)}"
+        summary_model = "failed"
 
     print(f"[analyze] 전체 소요 시간: {time.time() - total_start:.2f}초")
 

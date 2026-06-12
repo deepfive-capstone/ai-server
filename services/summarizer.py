@@ -96,12 +96,19 @@ def summarize_text(text: str, category: str = "기타"):
 
     prompt = build_prompt(text, category)
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
+    import time
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            return response.text.strip()
+        except Exception as e:
+            if attempt == 2:
+                raise e
+            time.sleep(2)
 
-    return response.text.strip()
 
 
 def improve_summary_with_gemini(original_text: str, qwen_summary: str, category: str):
@@ -135,9 +142,15 @@ Qwen 요약:
 {format_rule}
 """
 
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=prompt
-    )
-
-    return response.text.strip()
+    import time
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            return response.text.strip()
+        except Exception as e:
+            if attempt == 2:
+                raise e
+            time.sleep(2)

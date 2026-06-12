@@ -33,32 +33,21 @@ def classify_youtube(request: YoutubeClassifyRequest):
 
     video_info = get_video_info(video_id)
 
-    title = video_info.get("title") or ""
-    channel = video_info.get("channel") or ""
-    thumbnail = video_info.get("thumbnail") or ""
-    
-    try:
-        transcript = get_youtube_transcript(video_id)
-    except Exception as e:
-        print(f"[classify-youtube] 자막 추출 실패: {e}")
-        transcript = ""
+    title = video_info["title"]
+    channel = video_info["channel"]
+    thumbnail = video_info["thumbnail"]
+
+    transcript = get_youtube_transcript(video_id)
 
     text = (
-        title + "\n"
-        + "채널: " + channel + "\n"
-        + transcript
+        title + "\n" +
+        title + "\n" +
+        title + "\n" +
+        transcript[:1000]
     )
 
-    print("===== 서비스 분류 입력 확인 =====")
-    print("title:", title)
-    print("channel:", channel)
-    print("transcript length:", len(transcript))
-    print("text preview:")
-    print(text[:1500])
-    print("==============================")
 
-
-    result = predict_category_with_score(text, title=title)
+    result = predict_category_with_score(text)
 
     category = result["category"]
     confidence = result["confidence"]
