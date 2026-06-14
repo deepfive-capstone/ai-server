@@ -59,6 +59,32 @@ def get_youtube_info(url: str):
         "channel": info.get("channel") or info.get("uploader")
     }
 
+def pick_transcript_for_summary(text: str, max_chars: int = 800) -> str:
+    text = " ".join(text.split())
+
+    if len(text) <= max_chars:
+        return text
+
+    head_len = int(max_chars * 0.6)
+    mid_len = int(max_chars * 0.25)
+    tail_len = max_chars - head_len - mid_len
+
+    head = text[:head_len]
+
+    mid_start = max(0, len(text) // 2 - mid_len // 2)
+    mid = text[mid_start:mid_start + mid_len]
+
+    tail = text[-tail_len:]
+
+    return (
+        "[영상 앞부분]\n"
+        f"{head}\n\n"
+        "[영상 중간부분]\n"
+        f"{mid}\n\n"
+        "[영상 뒷부분]\n"
+        f"{tail}"
+    )
+
 @router.post("/analyze")
 def analyze(request: AnalyzeRequest):
     total_start = time.time()
@@ -105,13 +131,26 @@ def analyze(request: AnalyzeRequest):
     confidence = result["confidence"]
 
     try:
+        '''
         start = time.time()
         qwen_summary = summarize_with_lora(transcript, category)
+        print(f"[analyze] Qwen LoRA 요약: {time.time() - start:.2f}초")
+        '''
+        qwen_input = pick_transcript_for_summary(transcript, max_chars=800)
+        gemini_input = pick_transcript_for_summary(transcript, max_chars=3000)
+        
+        print(f"[analyze] 원본 자막 길이: {len(transcript)}")
+        print(f"[analyze] Qwen 입력 길이: {len(qwen_input)}")
+        print(f"[analyze] Gemini 입력 길이: {len(gemini_input)}")
+
+        start = time.time()
+        qwen_summary = summarize_with_lora(qwen_input, category)
         print(f"[analyze] Qwen LoRA 요약: {time.time() - start:.2f}초")
 
         start = time.time()
         summary = improve_summary_with_gemini(
-            original_text=transcript,
+            #original_text=transcript,
+            original_text=gemini_input,
             qwen_summary=qwen_summary,
             category=category
         )

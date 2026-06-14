@@ -2,9 +2,14 @@ import os
 from dotenv import load_dotenv
 from google import genai
 
-load_dotenv()
+load_dotenv(override=True)
 
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+key = os.getenv("GEMINI_API_KEY")
+
+print("[Gemini key prefix]", key[:8])
+print("[Gemini key length]", len(key))
+
+client = genai.Client(api_key=key)
 
 CATEGORY_FORMATS = {
     "자기계발": "핵심 메시지와 실천 포인트 중심",
@@ -134,8 +139,10 @@ Qwen 요약:
 - 자막에 없는 내용 추가 금지
 - Qwen 요약이 이상하면 원본 자막 기준으로 자연스럽게 보완
 - 자막 원문을 그대로 번역하지 말고 핵심만 요약
-- 설명형 긴 문장보다 키워드 중심으로 작성
-- 너무 길게 쓰지 않기
+- "~합니다", "~해요", "~입니다", "~할 수 있습니다" 같은 서술형 문장 사용 금지
+- 키워드만 나열하지 말고, 사용자가 내용을 이해할 수 있도록 짧은 설명을 함께 작성
+- 너무 짧게 줄이지 말고, 핵심 내용을 5~8개 항목으로 정리
+- 각 항목은 한 문장으로 자연스럽게 작성
 - 불필요한 설명, 인사말, 안내문 금지
 - 출력은 최종 요약만 작성
 
